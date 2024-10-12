@@ -56,10 +56,10 @@ Tipos de bicicletas y componentes:
    (x1 + x3 <= 120) (máximo de 120 marcos de acero disponibles).
 
 8. Restricción de marcos de aluminio:
-   (x2 + x4 <= 140) (máximo de 140 marcos de aluminio disponibles).
+   (x2 + x4 <= 60) (máximo de 60 marcos de aluminio disponibles).
 
 9. Restricción de marcos totales:
-   (x1 + x2 + x3 + x4 + x5 <= 260) (cantidad total de marco).
+   (x1 + x2 + x3 + x4 + x5 <= 180) (cantidad total de marco).
 
 10. No se pueden producir cantidades negativas:
    (x1, x2, x3, x4, x5 >= 0).
@@ -98,9 +98,16 @@ m.addConstr(2*x3 + 2*x4 <= 150)
 m.addConstr(2*x1 + 2*x2 <= 80)
 m.addConstr(2*x1 + 2*x2 + 2*x3 + 2*x4 + 2*x5 <= 300)
 m.addConstr(x1 + x3 <= 120)
-m.addConstr(x2 + x4 <= 140)
-m.addConstr(x1 + x2 + x3 + x4 + x5 <= 260)
+m.addConstr(x2 + x4 <= 60)
+m.addConstr(x1 + x2 + x3 + x4 + x5 <= 180)
 
 
 # Optimizar el modelo
 m.optimize()
+
+# Imprimir la solución
+
+for v in m.getVars():
+    print('%s %g' % (v.varName, v.x))
+
+print('Objetivo: %g' % m.objVal)
