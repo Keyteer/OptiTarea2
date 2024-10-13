@@ -74,40 +74,61 @@ Z = 180x1 + 220x2 + 190x3 + 210x4 + 150x5
 
 Este problema incluye restricciones sobre la disponibilidad de tiempo de ensamblaje y pintura, el presupuesto máximo para materiales, y la disponibilidad de llantas (delgadas, normales y de alto agarre) y marcos de acero o aluminio. El objetivo es maximizar las ganancias respetando las limitaciones de tiempo, materiales y componentes. Las bicicletas de montaña y carretera con marco de acero generan mayores ganancias, mientras que las de ciudad pueden utilizar cualquier material sin afectar las ganancias.
 '''
-
 import gurobipy as gp
+from gurobipy import GRB
 
 # Crear un nuevo modelo
 m = gp.Model("bicicletas")
 
 # Crear variables
-x1 = m.addVar(vtype=gp.GRB.INTEGER, name="x1")
-x2 = m.addVar(vtype=gp.GRB.INTEGER, name="x2")
-x3 = m.addVar(vtype=gp.GRB.INTEGER, name="x3")
-x4 = m.addVar(vtype=gp.GRB.INTEGER, name="x4")
-x5 = m.addVar(vtype=gp.GRB.INTEGER, name="x5")
+x1 = m.addVar(vtype=GRB.CONTINUOUS, name="x1")
+x2 = m.addVar(vtype=GRB.CONTINUOUS, name="x2")
+x3 = m.addVar(vtype=GRB.CONTINUOUS, name="x3")
+x4 = m.addVar(vtype=GRB.CONTINUOUS, name="x4")
+x5 = m.addVar(vtype=GRB.CONTINUOUS, name="x5")
 
 # Definir la función objetivo
-m.setObjective(180*x1 + 220*x2 + 190*x3 + 210*x4 + 150*x5, sense=gp.GRB.MAXIMIZE)
+m.setObjective(180*x1 + 220*x2 + 190*x3 + 210*x4 + 150*x5, GRB.MAXIMIZE)
 
 # Agregar restricciones
-m.addConstr(3*x1 + 3*x2 + 2*x3 + 2*x4 + 1*x5 <= 240)
-m.addConstr(x1 + x2 + x3 + x4 + 1.5*x5 <= 100)
-m.addConstr(120*x1 + 120*x2 + 100*x3 + 100*x4 + 80*x5 <= 10000)
-m.addConstr(2*x3 + 2*x4 <= 150)
-m.addConstr(2*x1 + 2*x2 <= 80)
-m.addConstr(2*x1 + 2*x2 + 2*x3 + 2*x4 + 2*x5 <= 300)
-m.addConstr(x1 + x3 <= 120)
-m.addConstr(x2 + x4 <= 60)
-m.addConstr(x1 + x2 + x3 + x4 + x5 <= 180)
+m.addConstr(3*x1 + 3*x2 + 2*x3 + 2*x4 + 1*x5 <= 240, "horas de ensamblaje")
+m.addConstr(x1 + x2 + x3 + x4 + 1.5*x5 <= 100, "horas de pintura")
+m.addConstr(120*x1 + 120*x2 + 100*x3 + 100*x4 + 80*x5 <= 10000, "costo de producción")
+m.addConstr(2*x3 + 2*x4 <= 150, "llantas delgadas")
+m.addConstr(2*x1 + 2*x2 <= 80, "llantas de alto agarre")
+m.addConstr(2*x1 + 2*x2 + 2*x3 + 2*x4 + 2*x5 <= 300, "llantas totales")
+m.addConstr(x1 + x3 <= 120, "marcos de acero")
+m.addConstr(x2 + x4 <= 60, "marcos de aluminio")
+m.addConstr(x1 + x2 + x3 + x4 + x5 <= 180, "marcos totales")
 
 
 # Optimizar el modelo
 m.optimize()
 
-# Imprimir la solución
+'''
+# Obtener las variables básicas y no básicas
+basic_vars = [v.varName for v in m.getVars() if v.X > 0]
+non_basic_vars = [v.varName for v in m.getVars() if v.X == 0]
 
-for v in m.getVars():
-    print('%s %g' % (v.varName, v.x))
+# Obtener los valores de las variables básicas
+basic_values = [v.X for v in m.getVars() if v.X > 0]
 
-print('Objetivo: %g' % m.objVal)
+# Obtener los valores de holgura (slack)
+slacks = [c.Slack for c in m.getConstrs()]
+
+# Imprimir la tabla final del método simplex
+print("\nTabla Final del Método Simplex:")
+print("\nVariables Básicas:")
+for var, value in zip(basic_vars, basic_values):
+    print(f"{var} = {value}")
+
+print("\nHolgura (Slack):")
+for i, slack in enumerate(slacks):
+    print(f"Restricción {i + 1}: holgura = {slack}")
+'''
+
+# Imprimir rangos de sensibilidad
+m.printAttr('SAObjLow')  # Rango inferior coeficiente objetivo
+m.printAttr('SAObjUp')   # Rango superior coeficiente objetivo
+m.printAttr('SARHSUp')   # Rango superior lado derecho restricción
+m.printAttr('SARHSLow')  # Rango inferior lado derecho restricción
